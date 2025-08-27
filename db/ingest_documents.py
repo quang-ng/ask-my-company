@@ -41,6 +41,7 @@ def convert_all_pdfs_to_markdown(directory_path: str) -> None:
     # Convert all pdfs to markdown
     for file_name in os.listdir(directory_path):
         if file_name.lower().endswith(".pdf"):
+            logging.info(f"Processing PDF: {file_name}")
             markdown_text = convert_pdf_to_markdown(
                 os.path.join(directory_path, file_name)
             )
@@ -63,7 +64,7 @@ def ingest_documents(directory_path: str) -> None:
 
     documents = []
     for filename in os.listdir(directory_path):
-
+        logging.info(f"Processing document: {filename}")
         # Now ingest all supported files
         file_path = os.path.join(directory_path, filename)
         if filename.lower().endswith(".docx"):
@@ -92,15 +93,3 @@ def ingest_documents(directory_path: str) -> None:
         node_parser=node_parser,
     )
     logging.info("Documents ingested and indexed successfully.")
-
-
-def main():
-    """Entry point for CLI usage."""
-    if len(sys.argv) < 2:
-        logging.error("Usage: python ingest_documents.py <directory_path>")
-        sys.exit(1)
-    ingest_documents(sys.argv[1])
-
-
-if __name__ == "__main__":
-    main()
