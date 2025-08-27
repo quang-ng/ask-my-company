@@ -4,10 +4,11 @@ from llama_index.embeddings.gemini import GeminiEmbedding
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.vector_stores.mongodb import MongoDBAtlasVectorSearch
 
+
 # MongoDB and LlamaIndex setup
-mongo_uri = 'mongodb://localhost:27017/'
-db_name = 'rag_db'
-collection_name = 'documents'
+mongo_uri = os.getenv('MONGO_URI', 'mongodb://localhost:27017/')
+db_name = os.getenv('MONGO_DB_NAME', 'rag_db')
+collection_name = os.getenv('MONGO_COLLECTION_NAME', 'documents')
 
 vector_store = MongoDBAtlasVectorSearch(
     mongo_uri=mongo_uri,
