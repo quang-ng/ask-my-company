@@ -31,11 +31,12 @@ class ChatResponse(BaseModel):
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(request: QueryRequest):
     # Retrieve conversation history
-    history = get_history(request.user_id)
+    conversation_history = get_history(request.user_id, max_messages=5)
+
     # Route query
-    response, intent = route_query(request.question, history, request.user_id)
+    response, intent = route_query(request.question, conversation_history, request.user_id)
+
     # Store conversation turn
     store_history(request.user_id, request.question, response, intent)
 
-    print({"response": response, "intent": intent})
     return ChatResponse(response=response, intent=intent)
