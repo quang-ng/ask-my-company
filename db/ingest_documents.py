@@ -1,18 +1,15 @@
 import os
 import sys
 import logging
-import pymongo
+from db import convert_pdf_to_markdown
 from dotenv import load_dotenv
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.vector_stores.mongodb import MongoDBAtlasVectorSearch
 from llama_index.embeddings.google_genai import GoogleGenerativeAIEmbeddings
-from llama_index.embeddings.gemini import GeminiEmbedding
 from llama_index.core.node_parser import SentenceSplitter
 
 # Document loaders for multiple formats
-from llama_index.readers.file import PDFReader
 from llama_index.readers.file import DocxReader
-from llama_index.readers.file import PandasExcelReader
 from llama_index.core.schema import Document
 
 from dotenv import load_dotenv
@@ -26,24 +23,10 @@ MONGO_DB = os.getenv("MONGO_DB")
 MONGO_COLLECTION = "embeddings_docs"
 
 
-def load_pdf_documents(filename: str):
-    """Load all PDF documents from the directory."""
-    loader = PDFReader()
-    docs = loader.load_data(filename)
-    return docs
-
-
 def load_docx_documents(filename: str):
     """Load all Word (.docx) documents from the directory."""
     loader = DocxReader()
     docs = loader.load_data(filename)
-    return docs
-
-
-def load_excel_documents(file_path: str):
-    """Load all Excel (.xlsx) documents from the directory."""
-    loader = PandasExcelReader()
-    docs = loader.load_data(file_path)
     return docs
 
 
@@ -53,6 +36,18 @@ def load_text_documents(file_path: str):
 
     return text
 
+def convert_all_pdfs_to_markdown(directory_path: str) -> None:
+    # Convert all pdfs to markdown
+    for file_name in os.listdir(directory_path):
+        if file_name.lower().endswith(".pdf"):
+            markdown_text = convert_pdf_to_markdown(
+                os.path.join(directory_path, file_name)
+            )
+            # Save the converted Markdown text to a file
+            md_filename = os.path.splitext(file_name)[0] + ".md"
+            md_path = os.path.join(directory_path, md_filename)
+            with open(md_path, "w", encoding="utf-8") as md_file:
+                md_file.write(markdown_text)
 
 
 def ingest_documents(directory_path: str) -> None:
@@ -63,23 +58,17 @@ def ingest_documents(directory_path: str) -> None:
     Args:
         directory_path (str): Path to the directory containing documents.
     """
+    convert_all_pdfs_to_markdown(directory_path)
+
     documents = []
     for filename in os.listdir(directory_path):
-        if filename.lower().endswith(".xlsx"):
-            documents.append(load_excel_documents(filename))
-        elif filename.lower().endswith(".pdf"):
-            documents.append(load_pdf_documents(filename))
-        elif filename.lower().endswith(".docx"):
-            documents.append(load_docx_documents(filename))
-        elif filename.lower().endswith((".txt", ".md")):
-            documents.append(load_text_documents(filename))
 
-    for filename in os.listdir(directory_path):
+        # Now ingest all supported files
         file_path = os.path.join(directory_path, filename)
-        if filename.lower().endswith((".txt", ".md")):
-            with open(file_path, "r", encoding="utf-8") as f:
-                text = f.read()
-            documents.append(Document(text=text, metadata={"filename": filename}))
+        if filename.lower().endswith(".docx"):
+            documents.append(load_docx_documents(file_path))
+        elif filename.lower().endswith((".txt", ".md")):
+            documents.append(load_text_documents(file_path))
         elif not filename.lower().endswith((".pdf", ".docx", ".xlsx", ".txt", ".md")):
             logging.warning(f"Unsupported file format: {filename}")
 

@@ -4,3 +4,4 @@ llama-index-vector-stores-mongodb
 llama-index-embeddings-google-genai
 pymongo
 python-dotenv
+docling
