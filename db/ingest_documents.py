@@ -36,6 +36,7 @@ def load_text_documents(file_path: str):
 
     return text
 
+
 def convert_all_pdfs_to_markdown(directory_path: str) -> None:
     # Convert all pdfs to markdown
     for file_name in os.listdir(directory_path):
